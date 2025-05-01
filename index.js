@@ -51,54 +51,77 @@ async function getWeatherData() {
   }
 }
 
-app.get('/', async (req, res) => {
+// Temperature endpoint
+app.get('/temperature', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
 
-  const { realtime, hourly } = data;
-
-  // Real-time values
+  const { realtime } = data;
   const tempF = celsiusToFahrenheit(realtime.temperature);
-  const windDirection = degreesToCompass(realtime.winddirection);
-
-  // Forecasted values
-  const windSpeedMph = kmhToMph(hourly.wind_speed_10m[0]);
-  const windGustsMph = kmhToMph(hourly.wind_gusts_10m[0]);
-  const precipitationInches = mmToInches(hourly.precipitation[0]);
-  const apparentTempF = celsiusToFahrenheit(hourly.apparent_temperature[0]);
-  const humidity = hourly.relative_humidity_2m[0];
-  const pressureInHg = hPaToInHg(hourly.pressure_msl[0]);
-  const uvIndex = hourly.uv_index[0];
-
-  const htmlContent = `
-    <html>
-      <head>
-        <title>Weather Dashboard</title>
-        <meta http-equiv="refresh" content="300"> <!-- Auto-refresh every 5 minutes -->
-        <style>
-          body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
-          h1 { color: #333; }
-          .widget { margin: 10px 0; padding: 12px; border: 1px solid #ccc; border-radius: 8px; background: #fff; }
-        </style>
-      </head>
-      <body>
-        <h1>Weather Dashboard - Lincoln, NE</h1>
-        <div class="widget"><strong>Temperature (real-time):</strong> ${tempF.toFixed(1)}°F</div>
-        <div class="widget"><strong>Apparent Temperature:</strong> ${apparentTempF.toFixed(1)}°F</div>
-        <div class="widget"><strong>Wind Speed (forecast):</strong> ${windSpeedMph.toFixed(1)} mph</div>
-        <div class="widget"><strong>Wind Gusts:</strong> ${windGustsMph.toFixed(1)} mph</div>
-        <div class="widget"><strong>Wind Direction:</strong> ${windDirection} (${realtime.winddirection}°)</div>
-        <div class="widget"><strong>Rainfall (last hour):</strong> ${precipitationInches.toFixed(2)} inches</div>
-        <div class="widget"><strong>Relative Humidity:</strong> ${humidity}%</div>
-        <div class="widget"><strong>Barometric Pressure:</strong> ${pressureInHg.toFixed(2)} inHg</div>
-        <div class="widget"><strong>UV Index:</strong> ${uvIndex.toFixed(1)}</div>
-      </body>
-    </html>
-  `;
-
-  res.send(htmlContent);
+  res.send(`${tempF.toFixed(1)}°F`);
 });
 
+// Wind Speed endpoint
+app.get('/windspeed', async (req, res) => {
+  const data = await getWeatherData();
+  if (!data) return res.send('Error fetching weather data.');
+
+  const { hourly } = data;
+  const windSpeedMph = kmhToMph(hourly.wind_speed_10m[0]);
+  res.send(`${windSpeedMph.toFixed(1)} mph`);
+});
+
+// Wind Gusts endpoint
+app.get('/windgusts', async (req, res) => {
+  const data = await getWeatherData();
+  if (!data) return res.send('Error fetching weather data.');
+
+  const { hourly } = data;
+  const windGustsMph = kmhToMph(hourly.wind_gusts_10m[0]);
+  res.send(`${windGustsMph.toFixed(1)} mph`);
+});
+
+// Rainfall endpoint
+app.get('/rainfall', async (req, res) => {
+  const data = await getWeatherData();
+  if (!data) return res.send('Error fetching weather data.');
+
+  const { hourly } = data;
+  const precipitationInches = mmToInches(hourly.precipitation[0]);
+  res.send(`${precipitationInches.toFixed(2)} inches`);
+});
+
+// Humidity endpoint
+app.get('/humidity', async (req, res) => {
+  const data = await getWeatherData();
+  if (!data) return res.send('Error fetching weather data.');
+
+  const { hourly } = data;
+  const humidity = hourly.relative_humidity_2m[0];
+  res.send(`${humidity}%`);
+});
+
+// Barometric Pressure endpoint
+app.get('/pressure', async (req, res) => {
+  const data = await getWeatherData();
+  if (!data) return res.send('Error fetching weather data.');
+
+  const { hourly } = data;
+  const pressureInHg = hPaToInHg(hourly.pressure_msl[0]);
+  res.send(`${pressureInHg.toFixed(2)} inHg`);
+});
+
+// UV Index endpoint
+app.get('/uv', async (req, res) => {
+  const data = await getWeatherData();
+  if (!data) return res.send('Error fetching weather data.');
+
+  const { hourly } = data;
+  const uvIndex = hourly.uv_index[0];
+  res.send(`${uvIndex.toFixed(1)}`);
+});
+
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
