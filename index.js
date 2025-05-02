@@ -8,8 +8,8 @@ const lat = 40.8136;
 const lon = -96.7026;
 
 // API URLs
-const realtimeURL = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
-const hourlyURL = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=precipitation,wind_gusts_10m,apparent_temperature,pressure_msl,wind_direction_10m,relative_humidity_2m,uv_index,wind_speed_10m,time&timezone=auto`;
+const realtimeURL = https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true;
+const hourlyURL = https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=precipitation,wind_gusts_10m,apparent_temperature,pressure_msl,wind_direction_10m,relative_humidity_2m,uv_index,wind_speed_10m;
 
 function celsiusToFahrenheit(celsius) {
   return (celsius * 9/5) + 32;
@@ -51,70 +51,54 @@ async function getWeatherData() {
   }
 }
 
-function get24HourRainTotal(precipArray, timeArray) {
-  const now = new Date();
-  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-  let totalRainMm = 0;
-
-  for (let i = 0; i < timeArray.length; i++) {
-    const entryTime = new Date(timeArray[i]);
-    if (entryTime >= oneDayAgo && entryTime <= now) {
-      totalRainMm += precipArray[i];
-    }
-  }
-
-  return mmToInches(totalRainMm);
-}
-
 // Individual widget endpoints
 app.get('/temperature', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
   const tempF = celsiusToFahrenheit(data.realtime.temperature);
-  res.send(`${tempF.toFixed(1)}°F`);
+  res.send(${tempF.toFixed(1)}°F);
 });
 
 app.get('/windspeed', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
   const windSpeedMph = kmhToMph(data.hourly.wind_speed_10m[0]);
-  res.send(`${windSpeedMph.toFixed(1)} mph`);
+  res.send(${windSpeedMph.toFixed(1)} mph);
 });
 
 app.get('/windgusts', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
   const windGustsMph = kmhToMph(data.hourly.wind_gusts_10m[0]);
-  res.send(`${windGustsMph.toFixed(1)} mph`);
+  res.send(${windGustsMph.toFixed(1)} mph);
 });
 
 app.get('/rainfall', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
-  const rainInches = get24HourRainTotal(data.hourly.precipitation, data.hourly.time);
-  res.send(`${rainInches.toFixed(2)} inches`);
+  const precipitationInches = mmToInches(data.hourly.precipitation[0]);
+  res.send(${precipitationInches.toFixed(2)} inches);
 });
 
 app.get('/humidity', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
   const humidity = data.hourly.relative_humidity_2m[0];
-  res.send(`${humidity}%`);
+  res.send(${humidity}%);
 });
 
 app.get('/pressure', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
   const pressureInHg = hPaToInHg(data.hourly.pressure_msl[0]);
-  res.send(`${pressureInHg.toFixed(2)} inHg`);
+  res.send(${pressureInHg.toFixed(2)} inHg);
 });
 
 app.get('/uv', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
   const uvIndex = data.hourly.uv_index[0];
-  res.send(`${uvIndex.toFixed(1)}`);
+  res.send(${uvIndex.toFixed(1)});
 });
 
 // JSON endpoint for SharpTools
@@ -129,7 +113,7 @@ app.get('/data', async (req, res) => {
   const windSpeedMph = kmhToMph(hourly.wind_speed_10m[0]);
   const windGustsMph = kmhToMph(hourly.wind_gusts_10m[0]);
   const windDirection = degreesToCompass(realtime.winddirection);
-  const precipitationInches = get24HourRainTotal(hourly.precipitation, hourly.time);
+  const precipitationInches = mmToInches(hourly.precipitation[0]);
   const humidity = hourly.relative_humidity_2m[0];
   const pressureInHg = hPaToInHg(hourly.pressure_msl[0]);
   const uvIndex = hourly.uv_index[0];
@@ -159,12 +143,12 @@ app.get('/', async (req, res) => {
   const windSpeedMph = kmhToMph(hourly.wind_speed_10m[0]);
   const windGustsMph = kmhToMph(hourly.wind_gusts_10m[0]);
   const windDirection = degreesToCompass(realtime.winddirection);
-  const precipitationInches = get24HourRainTotal(hourly.precipitation, hourly.time);
+  const precipitationInches = mmToInches(hourly.precipitation[0]);
   const humidity = hourly.relative_humidity_2m[0];
   const pressureInHg = hPaToInHg(hourly.pressure_msl[0]);
   const uvIndex = hourly.uv_index[0];
 
-  const htmlContent = `
+  const htmlContent = 
     <html>
       <head>
         <title>Weather Dashboard - Lincoln, NE</title>
@@ -182,18 +166,18 @@ app.get('/', async (req, res) => {
         <div class="widget"><strong>Wind Speed (forecast):</strong> ${windSpeedMph.toFixed(1)} mph</div>
         <div class="widget"><strong>Wind Gusts:</strong> ${windGustsMph.toFixed(1)} mph</div>
         <div class="widget"><strong>Wind Direction:</strong> ${windDirection} (${realtime.winddirection}°)</div>
-        <div class="widget"><strong>Rainfall (last 24 hours):</strong> ${precipitationInches.toFixed(2)} inches</div>
+        <div class="widget"><strong>Rainfall (last hour):</strong> ${precipitationInches.toFixed(2)} inches</div>
         <div class="widget"><strong>Relative Humidity:</strong> ${humidity}%</div>
         <div class="widget"><strong>Barometric Pressure:</strong> ${pressureInHg.toFixed(2)} inHg</div>
         <div class="widget"><strong>UV Index:</strong> ${uvIndex.toFixed(1)}</div>
       </body>
     </html>
-  `;
+  ;
 
   res.send(htmlContent);
 });
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(Server is running on port ${PORT});
 });
