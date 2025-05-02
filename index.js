@@ -76,8 +76,10 @@ app.get('/windgusts', async (req, res) => {
 app.get('/rainfall', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
-  const precipitationInches = mmToInches(data.hourly.precipitation[0]);
-  res.send(`${precipitationInches.toFixed(2)} inches`);
+  const precip24h = data.hourly.precipitation.slice(0, 24); // assuming latest 24 hours
+  const totalMm = precip24h.reduce((sum, val) => sum + val, 0);
+  const totalInches = mmToInches(totalMm);
+  res.send(`${totalInches.toFixed(2)} inches`);
 });
 
 app.get('/humidity', async (req, res) => {
@@ -113,7 +115,8 @@ app.get('/data', async (req, res) => {
   const windSpeedMph = kmhToMph(hourly.wind_speed_10m[0]);
   const windGustsMph = kmhToMph(hourly.wind_gusts_10m[0]);
   const windDirection = degreesToCompass(realtime.winddirection);
-  const precipitationInches = mmToInches(hourly.precipitation[0]);
+  const totalPrecipMm = hourly.precipitation.slice(0, 24).reduce((sum, val) => sum + val, 0);
+  const precipitationInches = mmToInches(totalPrecipMm);
   const humidity = hourly.relative_humidity_2m[0];
   const pressureInHg = hPaToInHg(hourly.pressure_msl[0]);
   const uvIndex = hourly.uv_index[0];
@@ -143,7 +146,8 @@ app.get('/', async (req, res) => {
   const windSpeedMph = kmhToMph(hourly.wind_speed_10m[0]);
   const windGustsMph = kmhToMph(hourly.wind_gusts_10m[0]);
   const windDirection = degreesToCompass(realtime.winddirection);
-  const precipitationInches = mmToInches(hourly.precipitation[0]);
+  const totalPrecipMm = hourly.precipitation.slice(0, 24).reduce((sum, val) => sum + val, 0);
+  const precipitationInches = mmToInches(totalPrecipMm);
   const humidity = hourly.relative_humidity_2m[0];
   const pressureInHg = hPaToInHg(hourly.pressure_msl[0]);
   const uvIndex = hourly.uv_index[0];
@@ -166,7 +170,7 @@ app.get('/', async (req, res) => {
         <div class="widget"><strong>Wind Speed (forecast):</strong> ${windSpeedMph.toFixed(1)} mph</div>
         <div class="widget"><strong>Wind Gusts:</strong> ${windGustsMph.toFixed(1)} mph</div>
         <div class="widget"><strong>Wind Direction:</strong> ${windDirection} (${realtime.winddirection}°)</div>
-        <div class="widget"><strong>Rainfall (last hour):</strong> ${precipitationInches.toFixed(2)} inches</div>
+        <div class="widget"><strong>Rainfall (last 24 hrs):</strong> ${precipitationInches.toFixed(2)} inches</div>
         <div class="widget"><strong>Relative Humidity:</strong> ${humidity}%</div>
         <div class="widget"><strong>Barometric Pressure:</strong> ${pressureInHg.toFixed(2)} inHg</div>
         <div class="widget"><strong>UV Index:</strong> ${uvIndex.toFixed(1)}</div>
