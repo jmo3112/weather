@@ -55,92 +55,104 @@ async function getWeatherData() {
 app.get('/temperature', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
-
-  const { realtime } = data;
-  const tempF = celsiusToFahrenheit(realtime.temperature);
+  const tempF = celsiusToFahrenheit(data.realtime.temperature);
   res.send(`${tempF.toFixed(1)}°F`);
 });
 
 app.get('/windspeed', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
-
-  const { hourly } = data;
-  const windSpeedMph = kmhToMph(hourly.wind_speed_10m[0]);
+  const windSpeedMph = kmhToMph(data.hourly.wind_speed_10m[0]);
   res.send(`${windSpeedMph.toFixed(1)} mph`);
 });
 
 app.get('/windgusts', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
-
-  const { hourly } = data;
-  const windGustsMph = kmhToMph(hourly.wind_gusts_10m[0]);
+  const windGustsMph = kmhToMph(data.hourly.wind_gusts_10m[0]);
   res.send(`${windGustsMph.toFixed(1)} mph`);
 });
 
 app.get('/rainfall', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
-
-  const { hourly } = data;
-  const precipitationInches = mmToInches(hourly.precipitation[0]);
+  const precipitationInches = mmToInches(data.hourly.precipitation[0]);
   res.send(`${precipitationInches.toFixed(2)} inches`);
 });
 
 app.get('/humidity', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
-
-  const { hourly } = data;
-  const humidity = hourly.relative_humidity_2m[0];
+  const humidity = data.hourly.relative_humidity_2m[0];
   res.send(`${humidity}%`);
 });
 
 app.get('/pressure', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
-
-  const { hourly } = data;
-  const pressureInHg = hPaToInHg(hourly.pressure_msl[0]);
+  const pressureInHg = hPaToInHg(data.hourly.pressure_msl[0]);
   res.send(`${pressureInHg.toFixed(2)} inHg`);
 });
 
 app.get('/uv', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
-
-  const { hourly } = data;
-  const uvIndex = hourly.uv_index[0];
+  const uvIndex = data.hourly.uv_index[0];
   res.send(`${uvIndex.toFixed(1)}`);
 });
 
-// Main page route to show all widgets
+// JSON endpoint for SharpTools
+app.get('/data', async (req, res) => {
+  const data = await getWeatherData();
+  if (!data) return res.status(500).send({ error: 'Weather fetch failed' });
+
+  const { realtime, hourly } = data;
+
+  const tempF = celsiusToFahrenheit(realtime.temperature);
+  const apparentTempF = celsiusToFahrenheit(hourly.apparent_temperature[0]);
+  const windSpeedMph = kmhToMph(hourly.wind_speed_10m[0]);
+  const windGustsMph = kmhToMph(hourly.wind_gusts_10m[0]);
+  const windDirection = degreesToCompass(realtime.winddirection);
+  const precipitationInches = mmToInches(hourly.precipitation[0]);
+  const humidity = hourly.relative_humidity_2m[0];
+  const pressureInHg = hPaToInHg(hourly.pressure_msl[0]);
+  const uvIndex = hourly.uv_index[0];
+
+  res.json({
+    tempF: tempF.toFixed(1),
+    apparentTempF: apparentTempF.toFixed(1),
+    windSpeedMph: windSpeedMph.toFixed(1),
+    windGustsMph: windGustsMph.toFixed(1),
+    windDirection,
+    humidity,
+    pressureInHg: pressureInHg.toFixed(2),
+    precipitationInches: precipitationInches.toFixed(2),
+    uvIndex: uvIndex.toFixed(1)
+  });
+});
+
+// Main page route with HTML summary
 app.get('/', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
 
   const { realtime, hourly } = data;
 
-  // Real-time values
   const tempF = celsiusToFahrenheit(realtime.temperature);
-  const windDirection = degreesToCompass(realtime.winddirection);
-
-  // Forecasted values
+  const apparentTempF = celsiusToFahrenheit(hourly.apparent_temperature[0]);
   const windSpeedMph = kmhToMph(hourly.wind_speed_10m[0]);
   const windGustsMph = kmhToMph(hourly.wind_gusts_10m[0]);
+  const windDirection = degreesToCompass(realtime.winddirection);
   const precipitationInches = mmToInches(hourly.precipitation[0]);
-  const apparentTempF = celsiusToFahrenheit(hourly.apparent_temperature[0]);
   const humidity = hourly.relative_humidity_2m[0];
   const pressureInHg = hPaToInHg(hourly.pressure_msl[0]);
   const uvIndex = hourly.uv_index[0];
 
-  // Generate HTML content for all widgets on the main page
   const htmlContent = `
     <html>
       <head>
         <title>Weather Dashboard - Lincoln, NE</title>
-        <meta http-equiv="refresh" content="300"> <!-- Auto-refresh every 5 minutes -->
+        <meta http-equiv="refresh" content="300">
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
           h1 { color: #333; }
