@@ -7,8 +7,8 @@ const PORT = process.env.PORT || 3000;
 const lat = 40.8136;
 const lon = -96.7026;
 
-// ✅ Includes time and timezone!
-const hourlyURL = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=precipitation,wind_gusts_10m,apparent_temperature,pressure_msl,wind_direction_10m,relative_humidity_2m,uv_index,wind_speed_10m,time&timezone=auto`;
+// ✅ Valid hourly variables (NO `time`)
+const hourlyURL = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=precipitation,wind_gusts_10m,apparent_temperature,pressure_msl,wind_direction_10m,relative_humidity_2m,uv_index,wind_speed_10m&timezone=auto`;
 const realtimeURL = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
 
 function celsiusToFahrenheit(celsius) {
