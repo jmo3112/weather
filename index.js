@@ -7,9 +7,9 @@ const PORT = process.env.PORT || 3000;
 const lat = 40.8136;
 const lon = -96.7026;
 
-// API URLs
+// ✅ Includes time and timezone!
+const hourlyURL = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=precipitation,wind_gusts_10m,apparent_temperature,pressure_msl,wind_direction_10m,relative_humidity_2m,uv_index,wind_speed_10m,time&timezone=auto`;
 const realtimeURL = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
-const hourlyURL = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=precipitation,wind_gusts_10m,apparent_temperature,pressure_msl,wind_direction_10m,relative_humidity_2m,uv_index,wind_speed_10m`;
 
 function celsiusToFahrenheit(celsius) {
   return (celsius * 9/5) + 32;
@@ -76,7 +76,7 @@ app.get('/windgusts', async (req, res) => {
 app.get('/rainfall', async (req, res) => {
   const data = await getWeatherData();
   if (!data) return res.send('Error fetching weather data.');
-  const precip24h = data.hourly.precipitation.slice(0, 24); // assuming latest 24 hours
+  const precip24h = data.hourly.precipitation.slice(0, 24);
   const totalMm = precip24h.reduce((sum, val) => sum + val, 0);
   const totalInches = mmToInches(totalMm);
   res.send(`${totalInches.toFixed(2)} inches`);
@@ -181,7 +181,6 @@ app.get('/', async (req, res) => {
   res.send(htmlContent);
 });
 
-// Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
